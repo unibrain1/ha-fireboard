@@ -40,8 +40,6 @@ The polling interval is now set during integration setup and defaults to **60 se
 - **Battery Monitoring**: Track battery levels on wireless devices
 - **Connectivity Status**: Binary sensor for device online/offline state
 - **Cloud API**: Uses the official FireBoard Cloud API — no MQTT broker required
-- **HACS Compatible**: Easy installation through Home Assistant Community Store
-
 ## Supported Devices
 
 - **FireBoard 2 Pro**: 6-channel WiFi thermometer
@@ -51,21 +49,9 @@ The polling interval is now set during integration setup and defaults to **60 se
 
 ## Installation
 
-### HACS (Recommended)
-
-1. Open HACS in Home Assistant
-2. Go to Integrations
-3. Click "+ Explore & Download Repositories"
-4. Search for "FireBoard"
-5. Click "Download"
-6. Restart Home Assistant
-
-### Manual Installation
-
-1. Download the latest release
-2. Extract to `custom_components/fireboard/` in your Home Assistant config directory
-3. Restart Home Assistant
-4. Add the integration through the UI
+1. Copy the `custom_components/fireboard/` directory to your Home Assistant config directory
+2. Restart Home Assistant
+3. Go to **Settings → Devices & Services → Add Integration** and search for **FireBoard**
 
 ## Configuration
 
@@ -270,7 +256,7 @@ ha-fireboard/
 - Temperature sensor support
 - Battery monitoring
 - Connectivity status
-- HACS compatibility
+- Manual installation
 
 ## License
 
