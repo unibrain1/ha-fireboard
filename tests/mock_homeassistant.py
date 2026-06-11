@@ -328,7 +328,7 @@ class MockVoluptuous:
 
 # Mock the homeassistant module structure
 homeassistant = MockModule(
-    core=MockModule(HomeAssistant=HomeAssistant),
+    core=MockModule(HomeAssistant=HomeAssistant, callback=lambda func: func),
     config_entries=MockModule(
         ConfigEntry=ConfigEntry,
         ConfigFlow=ConfigFlow,
