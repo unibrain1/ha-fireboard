@@ -100,6 +100,8 @@ Let the integration run for several hours.
 
 ## Dashboard Test
 
+> Entity IDs are derived from your grill's name and channel labels in the FireBoard app. The examples below use "ike" — replace with your own grill name. Find exact IDs in **Developer Tools → States**.
+
 Create a quick entities card to verify display:
 
 ```yaml

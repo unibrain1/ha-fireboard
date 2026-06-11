@@ -67,9 +67,19 @@ The polling interval is now set during integration setup and defaults to **60 se
 
 ## Entities
 
+### Entity ID Format
+
+Entity IDs are generated automatically from your device's name in the FireBoard app — nothing is hardcoded. The pattern is:
+
+```
+sensor.<grill_name>_<channel_label>
+```
+
+For example, a grill named **"Smoker"** with a channel labelled **"Brisket"** produces `sensor.smoker_brisket`. Renaming either in the FireBoard app updates the entity name in HA within one poll cycle. Use **Developer Tools → States** and filter by your grill name to find your exact entity IDs.
+
 ### Temperature Sensors
 - One sensor per channel (up to 7 per device depending on model)
-- Named from the custom label set in the FireBoard app (e.g. `sensor.ike_meat_probe_1`)
+- Named from the custom label set in the FireBoard app
 - Device class: `temperature` | Unit: Fahrenheit (°F)
 - Attributes: `channel`, `label`, `target_temp`
 
@@ -88,6 +98,8 @@ The polling interval is now set during integration setup and defaults to **60 se
 - **Battery Low**: Alert when battery is below threshold
 
 ## Dashboard Examples
+
+> **Note:** The entity IDs below (`sensor.ike_...`, `binary_sensor.ike_...`) are examples from a grill named "Ike". Replace `ike` with your own grill's name as it appears in the FireBoard app. Find your exact IDs in **Developer Tools → States**.
 
 ### Temperature with ApexCharts Gauge
 

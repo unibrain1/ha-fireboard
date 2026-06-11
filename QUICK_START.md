@@ -48,9 +48,11 @@ docker restart homeassistant
 
 ## Step 4: Verify Entities
 
-After a successful setup, check **Developer Tools → States** and search for your device name. You should see:
+After a successful setup, check **Developer Tools → States** and search for your grill's name (as set in the FireBoard app) to find your entities. Entity IDs are generated dynamically from your device name and channel labels — nothing is hardcoded in the integration.
 
-| Entity type | Example | Notes |
+The pattern is `sensor.<grill_name>_<channel_label>`. The examples below use "ike" as the grill name — substitute your own.
+
+| Entity type | Example (grill named "ike") | Notes |
 |---|---|---|
 | Temperature sensor | `sensor.ike_meat_probe_1` | One per channel with an active reading |
 | Alert max sensor | `sensor.kitchen_ike_meat_probe_1_alert_max` | Only for channels with an active alert |
