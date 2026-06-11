@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 from .const import API_BASE_URL, API_TIMEOUT
 
@@ -67,7 +66,7 @@ class FireBoardApiClient:
 
         """
         try:
-            async with async_timeout.timeout(API_TIMEOUT):
+            async with asyncio.timeout(API_TIMEOUT):
                 # Auth endpoint is at /api/rest-auth/login/ (not /api/v1/)
                 auth_url = self._base_url.replace("/v1", "") + "/rest-auth/login/"
                 response = await self._session.post(
@@ -116,14 +115,13 @@ class FireBoardApiClient:
 
                 # Debug: Check what cookies we have
                 cookies = [
-                    f"{cookie.key}={cookie.value}"
-                    for cookie in self._cookie_jar
+                    f"{cookie.key}={cookie.value}" for cookie in self._cookie_jar
                 ]
                 _LOGGER.debug(
                     "Successfully authenticated with FireBoard API. "
                     "Cookies: %s, CSRF: %s",
                     ", ".join(cookies) if cookies else "None",
-                    self._csrf_token
+                    self._csrf_token,
                 )
                 return True
 
@@ -172,13 +170,13 @@ class FireBoardApiClient:
             headers["X-CSRFToken"] = self._csrf_token
 
         try:
-            async with async_timeout.timeout(API_TIMEOUT):
+            async with asyncio.timeout(API_TIMEOUT):
                 url = f"{self._base_url}/{endpoint}"
                 _LOGGER.debug(
                     "Making %s request to %s with %d cookies",
                     method,
                     url,
-                    len(list(self._cookie_jar))
+                    len(list(self._cookie_jar)),
                 )
                 response = await self._session.request(
                     method,

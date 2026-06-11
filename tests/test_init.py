@@ -45,7 +45,7 @@ async def test_setup_entry(hass, mock_config_entry_data, mock_coordinator_data):
 
 async def test_unload_entry(hass, mock_config_entry_data, mock_coordinator_data):
     """Test unloading a config entry."""
-    config_entry = MockConfigEntry(
+    config_entry = ConfigEntry(
         domain=DOMAIN,
         title="Test",
         data=mock_config_entry_data,

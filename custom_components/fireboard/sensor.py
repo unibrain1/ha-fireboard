@@ -50,7 +50,9 @@ async def async_setup_entry(
                 if temp_uid not in tracked:
                     tracked.add(temp_uid)
                     new_entities.append(
-                        FireBoardTemperatureSensor(coordinator, device_uuid, channel_number)
+                        FireBoardTemperatureSensor(
+                            coordinator, device_uuid, channel_number
+                        )
                     )
 
                 for alert_type in ("max", "min"):
@@ -74,7 +76,9 @@ async def async_setup_entry(
                 battery_uid = f"{device_uuid}_battery"
                 if battery_uid not in tracked:
                     tracked.add(battery_uid)
-                    new_entities.append(FireBoardBatterySensor(coordinator, device_uuid))
+                    new_entities.append(
+                        FireBoardBatterySensor(coordinator, device_uuid)
+                    )
 
         if new_entities:
             async_add_entities(new_entities)
@@ -123,7 +127,9 @@ class FireBoardTemperatureSensor(FireBoardEntity, SensorEntity):
         for channel in device_info.get("channels", []):
             if channel.get("channel") == self._channel_number:
                 channel_info = {
-                    "label": channel.get("channel_label", f"Channel {self._channel_number}"),
+                    "label": channel.get(
+                        "channel_label", f"Channel {self._channel_number}"
+                    ),
                     "channel": channel.get("channel"),
                     "current_temp": channel.get("current_temp"),
                 }
@@ -201,7 +207,8 @@ class FireBoardAlertSensor(FireBoardEntity, SensorEntity):
             if ch.get("channel") == self._channel_number:
                 active = next(
                     (
-                        a for a in ch.get("alerts", [])
+                        a
+                        for a in ch.get("alerts", [])
                         if a.get("enabled") and a.get(field) is not None
                     ),
                     None,

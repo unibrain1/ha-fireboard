@@ -123,10 +123,9 @@ class FireBoardMQTTClient:
             self._client.on_message = self._on_message
 
             # Build cookie header from session cookies
-            cookie_header = "; ".join([
-                f"{key}={value}"
-                for key, value in self._session_cookies.items()
-            ])
+            cookie_header = "; ".join(
+                [f"{key}={value}" for key, value in self._session_cookies.items()]
+            )
 
             # Configure WebSocket with cookies and proper protocol
             self._client.ws_set_options(
@@ -184,21 +183,19 @@ class FireBoardMQTTClient:
                 result, _ = self._client.subscribe(topic)
                 if result == mqtt.MQTT_ERR_SUCCESS:
                     _LOGGER.info(
-                        "Subscribed to device %s channel %d",
-                        device_uuid,
-                        channel
+                        "Subscribed to device %s channel %d", device_uuid, channel
                     )
                 else:
                     _LOGGER.error(
                         "Failed to subscribe to device %s channel %d",
                         device_uuid,
-                        channel
+                        channel,
                     )
             else:
                 _LOGGER.debug(
                     "Device %s channel %d will be subscribed on connection",
                     device_uuid,
-                    channel
+                    channel,
                 )
 
         # Also subscribe to drive log if needed
