@@ -1,85 +1,32 @@
 # Project Status
 
-## Current Implementation Status
+## Current Version: 0.2.0
 
-### ✅ Completed Features
+### ✅ Working
 
-1. **MQTT Real-Time Updates**
-   - Implemented MQTT over WebSocket client
-   - Real-time temperature data streaming
-   - Automatic reconnection and resubscription
-   - Changed IoT class to `cloud_push`
+- **REST API polling** — temperature data fetched every 60 seconds (configurable)
+- **Temperature sensors** — one per channel, named from FireBoard app labels
+- **Alert threshold sensors** — `alert_max` and `alert_min` entities created automatically for channels with active alerts
+- **Dynamic entity registration** — new channels and alerts appear within one poll cycle, no reload required
+- **Dynamic sensor naming** — channel renames in the FireBoard app reflect in HA automatically
+- **Binary sensors** — connectivity and battery low
+- **Config flow** — UI setup with email/password/polling interval
+- **GitHub Actions CI** — tests, linting, type checking
 
-2. **API Integration**
-   - REST API authentication with session cookies
-   - Device discovery and metadata retrieval
-   - Proper error handling and rate limiting
+### ❌ Not Supported
 
-3. **Test Coverage**
-   - 82.26% code coverage (exceeds 80% target)
-   - 35 out of 40 tests passing (87.5%)
-   - All core functionality tested:
-     - API client (6/6 tests passing)
-     - MQTT client (13/13 tests passing)
-     - Config flow (majority passing)
-     - Sensors and binary sensors (majority passing)
+- MQTT / real-time push updates (intentionally removed — REST polling is sufficient)
+- HACS distribution (manual installation only)
+- Write operations (setting target temperatures, controlling the pellet drive, etc.)
 
-4. **Development Environment**
-   - Docker Compose setup for isolated testing
-   - Comprehensive documentation
-   - GitHub Actions CI/CD pipeline
+### 📋 Known Limitations
 
-### 🔄 Next Steps
-
-1. **Verify GitHub Actions** ✨ (Current)
-   - Ensure CI/CD pipeline passes
-   - Verify Codecov integration
-   - Confirm HACS validation
-
-2. **Physical Device Testing**
-   - Install in Home Assistant
-   - Test with Yoder YS640s
-   - Test with FireBoard Spark
-   - Test with FireBoard 2 Pro
-   - Verify real-time MQTT updates
-
-3. **HACS Submission**
-   - Create v0.1.0 release
-   - Submit to HACS
-   - Update documentation
-
-### 📊 Test Results
-
-**Passing Tests:**
-- ✅ API authentication and device discovery
-- ✅ MQTT connection and message handling
-- ✅ Sensor creation and data updates
-- ✅ Config flow user interactions
-- ✅ Binary sensor states
-
-**Known Test Failures (5):**
-- Complex coordinator error scenarios
-- Integration setup entry state management
-- These don't affect core functionality
-
-### 🐛 Known Issues
-
-1. Some coordinator integration tests fail due to complex mocking requirements
-2. MQTT client shows deprecation warning for callback API version 1
-3. Test environment blocks socket connections (expected behavior)
-
-### 📝 Documentation
-
-- ✅ MQTT Implementation details
-- ✅ Development environment setup
-- ✅ Quick start guide
-- ✅ Testing guide
-- ✅ Security policy
-- ✅ Contributing guidelines
+- Temperatures only update on poll interval (default 60s), not in real time
+- `current_temp` is only present in the API response for channels with an active probe reading; channels with no probe show as `unknown`
+- Battery sensor only created for devices that report `has_battery: true`
 
 ---
 
-**Last Updated:** October 23, 2025
-**Version:** 0.1.0-dev
-**Coverage:** 82.26%
-**Tests:** 35/40 passing
+**Last Updated:** June 2026
+**Version:** 0.2.0
+**Repo:** <https://github.com/unibrain1/ha-fireboard>

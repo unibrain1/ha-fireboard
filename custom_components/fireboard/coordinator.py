@@ -1,4 +1,4 @@
-"""Data update coordinator for FireBoard integration with MQTT support."""
+"""Data update coordinator for FireBoard integration."""
 
 from __future__ import annotations
 
@@ -18,13 +18,12 @@ from .api_client import (
     FireBoardApiClientRateLimitError,
 )
 from .const import CONF_POLLING_INTERVAL, DEFAULT_POLLING_INTERVAL, DOMAIN
-from .mqtt_client import FireBoardMQTTClient
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class FireBoardDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching data from FireBoard API and MQTT."""
+    """Coordinator that fetches FireBoard data via REST API polling."""
 
     def __init__(
         self,
@@ -33,10 +32,7 @@ class FireBoardDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize the coordinator."""
         self.config_entry = config_entry
-        self.mqtt_client: FireBoardMQTTClient | None = None
-        self._subscribed_devices: set[str] = set()
 
-        # Create API client
         session = async_get_clientsession(hass)
         self.client = FireBoardApiClient(
             email=config_entry.data[CONF_EMAIL],
@@ -54,156 +50,26 @@ class FireBoardDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=polling_interval),
         )
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator with MQTT."""
-        try:
-            # Authenticate first
-            await self.client.authenticate()
-
-            # Set up MQTT client for real-time updates
-            if self.client.auth_token and self.client.session_cookies:
-                self.mqtt_client = FireBoardMQTTClient(
-                    auth_token=self.client.auth_token,
-                    session_cookies=self.client.session_cookies,
-                    on_message_callback=self._handle_mqtt_message,
-                )
-
-                # Connect to MQTT broker
-                await self.hass.async_add_executor_job(self.mqtt_client.connect)
-
-                _LOGGER.info("MQTT client connected successfully")
-            else:
-                _LOGGER.warning("No auth token or session cookies available for MQTT")
-
-        except Exception as err:
-            _LOGGER.warning(
-                "MQTT connection unavailable, will use REST API polling: %s", err
-            )
-            # Don't fail setup, we can fall back to polling
-            self.mqtt_client = None
-
-    def _handle_mqtt_message(
-        self, device_uuid: str, message_data: dict[str, Any]
-    ) -> None:
-        """Handle incoming MQTT message with temperature data.
-
-        Args:
-            device_uuid: The device UUID
-            message_data: The message payload containing temperature data
-                         Format: {"temp": 67, "channel": 1, "p": true,
-                                 "date": "...", "degreetype": 2}
-
-        """
-        _LOGGER.debug("MQTT message for device %s: %s", device_uuid, message_data)
-
-        # Update the coordinator's data with the new temperature info
-        if self.data and device_uuid in self.data:
-            # Initialize temperatures dict if not exists
-            if "temperatures" not in self.data[device_uuid]:
-                self.data[device_uuid]["temperatures"] = {"channels": []}
-
-            # Update or add channel temperature
-            channel_num = message_data.get("channel")
-            if channel_num:
-                channels = self.data[device_uuid]["temperatures"].get("channels", [])
-
-                # Find and update existing channel or add new one
-                found = False
-                for ch in channels:
-                    if ch.get("channel") == channel_num:
-                        ch["current_temp"] = message_data.get("temp")
-                        ch["probe_present"] = message_data.get("p", False)
-                        ch["last_update"] = message_data.get("date")
-                        found = True
-                        break
-
-                if not found:
-                    channels.append(
-                        {
-                            "channel": channel_num,
-                            "current_temp": message_data.get("temp"),
-                            "probe_present": message_data.get("p", False),
-                            "last_update": message_data.get("date"),
-                        }
-                    )
-
-                self.data[device_uuid]["temperatures"]["channels"] = channels
-                self.data[device_uuid]["online"] = True
-
-                # Trigger update to sensors
-                self.async_set_updated_data(self.data)
-        else:
-            _LOGGER.debug("Received data for unknown device: %s", device_uuid)
-
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update device list via REST API.
-
-        MQTT handles real-time temperature updates, so this just refreshes
-        the device list and configuration periodically.
-
-        Returns:
-            Dictionary containing all device data
-
-        Raises:
-            UpdateFailed: If update fails
-
-        """
+        """Fetch current device and temperature data from the FireBoard REST API."""
         try:
-            # Ensure we're authenticated
             if not self.client.auth_token:
                 await self.client.authenticate()
 
-                # Set up MQTT if not already connected
-                if not self.mqtt_client and self.client.auth_token:
-                    await self._async_setup()
-
-            # Get all devices from REST API
             devices = await self.client.get_devices()
 
-            # Build data structure with device info
             device_data = {}
-
             for device in devices:
                 device_uuid = device.get("uuid")
                 if not device_uuid:
                     continue
 
-                # Keep existing temperature data if we have it (from MQTT)
-                existing_temps = {}
-                if self.data and device_uuid in self.data:
-                    existing_temps = self.data[device_uuid].get("temperatures", {})
-
-                # Extract channel information and latest temps from device data
-                channels = device.get("channels", [])
-                latest_temps = device.get("latest_temps", [])
-
                 device_data[device_uuid] = {
                     "device_info": device,
-                    "channels": channels,
-                    "latest_temps": latest_temps,
-                    "temperatures": existing_temps,  # Keep MQTT temps
+                    "channels": device.get("channels", []),
+                    "latest_temps": device.get("latest_temps", []),
                     "online": True,
                 }
-
-                # Subscribe to MQTT for this device
-                if self.mqtt_client and device_uuid not in self._subscribed_devices:
-                    # Get list of channel numbers
-                    channel_numbers = [
-                        ch.get("channel") for ch in channels if ch.get("channel")
-                    ]
-
-                    if channel_numbers:
-                        await self.hass.async_add_executor_job(
-                            self.mqtt_client.subscribe_device,
-                            device_uuid,
-                            channel_numbers,
-                        )
-                        self._subscribed_devices.add(device_uuid)
-                        _LOGGER.debug(
-                            "Subscribed to MQTT for device %s (channels: %s)",
-                            device_uuid,
-                            channel_numbers,
-                        )
 
                 _LOGGER.debug(
                     "Updated data for device %s",
@@ -221,9 +87,3 @@ class FireBoardDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception as err:
             _LOGGER.error("Unexpected error: %s", err)
             raise UpdateFailed(f"Unexpected error: {err}") from err
-
-    async def async_shutdown(self) -> None:
-        """Shutdown the coordinator."""
-        if self.mqtt_client:
-            await self.hass.async_add_executor_job(self.mqtt_client.disconnect)
-            _LOGGER.info("MQTT client disconnected")
