@@ -96,16 +96,50 @@ class ConfigEntry:
         pass
 
 
+class AbortFlow(Exception):
+    """Mock AbortFlow exception used to signal an abort during a flow step."""
+
+    def __init__(self, reason: str):
+        self.reason = reason
+        super().__init__(reason)
+
+
 class ConfigFlow:
     """Mock ConfigFlow class."""
 
     def __init__(self, *args, **kwargs):
-        pass
+        self._unique_id = None
+        self.hass = None
 
     def __init_subclass__(cls, domain=None, **kwargs):
         """Mock __init_subclass__ to handle domain parameter."""
         cls.domain = domain
         super().__init_subclass__(**kwargs)
+
+    async def async_set_unique_id(self, unique_id, raise_on_progress=True):
+        """Mock async_set_unique_id."""
+        self._unique_id = unique_id
+
+    def _abort_if_unique_id_configured(self, updates=None, reload_on_update=True):
+        """Mock _abort_if_unique_id_configured.
+
+        Walks hass.config_entries.async_entries() for an entry with the
+        same unique_id and raises AbortFlow("already_configured") if found.
+        """
+        if not self.hass or self._unique_id is None:
+            return
+        try:
+            entries = self.hass.config_entries.async_entries(self.domain)
+        except Exception:
+            return
+        # entries may be a MagicMock that isn't iterable; bail in that case
+        try:
+            iter(entries)
+        except TypeError:
+            return
+        for entry in entries:
+            if getattr(entry, "unique_id", None) == self._unique_id:
+                raise AbortFlow("already_configured")
 
     def async_show_form(self, step_id, data_schema=None, errors=None):
         """Mock async_show_form method."""
@@ -291,7 +325,11 @@ homeassistant = MockModule(
         ConfigFlow=ConfigFlow,
         SOURCE_USER="user",
     ),
-    data_entry_flow=MockModule(FlowResultType=FlowResultType, FlowResult=FlowResult),
+    data_entry_flow=MockModule(
+        FlowResultType=FlowResultType,
+        FlowResult=FlowResult,
+        AbortFlow=AbortFlow,
+    ),
     exceptions=MockModule(
         HomeAssistantError=HomeAssistantError,
         ConfigEntryNotReady=ConfigEntryNotReady,

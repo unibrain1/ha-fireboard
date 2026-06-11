@@ -4,26 +4,24 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.const import CONF_EMAIL
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 
-from custom_components.fireboard.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-    RateLimitExceeded,
-)
-from custom_components.fireboard.const import CONF_POLLING_INTERVAL, DOMAIN
+from custom_components.fireboard.config_flow import ConfigFlow as FireBoardConfigFlow
+from custom_components.fireboard.const import DOMAIN
+
+
+def _make_flow(hass) -> FireBoardConfigFlow:
+    """Build a ConfigFlow bound to the given hass."""
+    flow = FireBoardConfigFlow()
+    flow.hass = hass
+    return flow
 
 
 async def test_form(hass):
     """Test we get the form."""
-    from custom_components.fireboard.config_flow import ConfigFlow as FireBoardConfigFlow
-
-    flow = FireBoardConfigFlow()
-    flow.hass = hass
+    flow = _make_flow(hass)
     result = await flow.async_step_user(user_input=None)
     assert result["type"] == FlowResultType.FORM
     assert result.get("errors") in (None, {})
@@ -39,11 +37,8 @@ async def test_user_success(hass, mock_config_entry_data):
         mock_instance.get_devices = AsyncMock(return_value=[{"uuid": "device-1"}])
         mock_client.return_value = mock_instance
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=mock_config_entry_data,
-        )
+        flow = _make_flow(hass)
+        result = await flow.async_step_user(user_input=mock_config_entry_data)
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == f"FireBoard ({mock_config_entry_data[CONF_EMAIL]})"
@@ -65,11 +60,8 @@ async def test_user_invalid_auth(hass, mock_config_entry_data):
         )
         mock_client.return_value = mock_instance
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=mock_config_entry_data,
-        )
+        flow = _make_flow(hass)
+        result = await flow.async_step_user(user_input=mock_config_entry_data)
 
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
@@ -90,11 +82,8 @@ async def test_user_cannot_connect(hass, mock_config_entry_data):
         )
         mock_client.return_value = mock_instance
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=mock_config_entry_data,
-        )
+        flow = _make_flow(hass)
+        result = await flow.async_step_user(user_input=mock_config_entry_data)
 
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
@@ -115,11 +104,8 @@ async def test_user_rate_limit(hass, mock_config_entry_data):
         )
         mock_client.return_value = mock_instance
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=mock_config_entry_data,
-        )
+        flow = _make_flow(hass)
+        result = await flow.async_step_user(user_input=mock_config_entry_data)
 
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "rate_limit"}
@@ -127,14 +113,12 @@ async def test_user_rate_limit(hass, mock_config_entry_data):
 
 async def test_user_already_configured(hass, mock_config_entry_data):
     """Test we handle already configured."""
-    # Create an existing entry
     entry = ConfigEntry(
         domain=DOMAIN,
         title=f"FireBoard ({mock_config_entry_data[CONF_EMAIL]})",
         data=mock_config_entry_data,
         unique_id=mock_config_entry_data[CONF_EMAIL].lower(),
     )
-    # Mock that the entry exists
     hass.config_entries.async_entries = lambda domain: (
         [entry] if domain == DOMAIN else []
     )
@@ -147,11 +131,12 @@ async def test_user_already_configured(hass, mock_config_entry_data):
         mock_instance.get_devices = AsyncMock(return_value=[])
         mock_client.return_value = mock_instance
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=mock_config_entry_data,
-        )
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+        flow = _make_flow(hass)
+        try:
+            result = await flow.async_step_user(user_input=mock_config_entry_data)
+            # In a real HA flow the framework would catch AbortFlow and produce
+            # an abort result; replicate that here if the mock returned normally.
+            assert result["type"] == FlowResultType.ABORT
+            assert result["reason"] == "already_configured"
+        except AbortFlow as err:
+            assert err.reason == "already_configured"
