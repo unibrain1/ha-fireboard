@@ -276,7 +276,11 @@ class MockVoluptuous:
 # Mock the homeassistant module structure
 homeassistant = MockModule(
     core=MockModule(HomeAssistant=HomeAssistant),
-    config_entries=MockModule(ConfigEntry=ConfigEntry, ConfigFlow=ConfigFlow),
+    config_entries=MockModule(
+        ConfigEntry=ConfigEntry,
+        ConfigFlow=ConfigFlow,
+        SOURCE_USER="user",
+    ),
     data_entry_flow=MockModule(FlowResultType=FlowResultType, FlowResult=FlowResult),
     exceptions=MockModule(
         HomeAssistantError=HomeAssistantError,
@@ -300,6 +304,12 @@ homeassistant = MockModule(
         ),
         aiohttp_client=MockModule(
             async_get_clientsession=lambda hass: MagicMock(),
+        ),
+        entity_platform=MockModule(
+            AddEntitiesCallback=MagicMock,
+        ),
+        device_registry=MockModule(
+            DeviceInfo=DeviceInfo,
         ),
     ),
     components=MockModule(
