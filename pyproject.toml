@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ha-fireboard"
-version = "0.1.0"
+version = "0.2.0"
 description = "Home Assistant integration for FireBoard wireless thermometers"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Garth Braithwaite", email = "garthdb@gmail.com"},
+    {name = "unibrain1"},
 ]
-keywords = ["home-assistant", "fireboard", "hacs", "thermometer", "bbq", "grilling"]
+keywords = ["home-assistant", "fireboard", "thermometer", "bbq", "grilling"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -27,10 +27,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/garthdb/ha-fireboard"
-Repository = "https://github.com/garthdb/ha-fireboard.git"
-Issues = "https://github.com/garthdb/ha-fireboard/issues"
-Documentation = "https://github.com/garthdb/ha-fireboard#readme"
+Homepage = "https://github.com/unibrain1/ha-fireboard"
+Repository = "https://github.com/unibrain1/ha-fireboard.git"
+Issues = "https://github.com/unibrain1/ha-fireboard/issues"
+Documentation = "https://github.com/unibrain1/ha-fireboard#readme"
 
 [project.optional-dependencies]
 dev = [

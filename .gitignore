@@ -1,1 +1,7 @@
 ha-fireboard.code-workspace
+.claude/
+__pycache__/
+*.pyc
+.coverage
+htmlcov/
+.mypy_cache/
