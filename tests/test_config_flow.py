@@ -20,9 +20,11 @@ from custom_components.fireboard.const import CONF_POLLING_INTERVAL, DOMAIN
 
 async def test_form(hass):
     """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    from custom_components.fireboard.config_flow import ConfigFlow as FireBoardConfigFlow
+
+    flow = FireBoardConfigFlow()
+    flow.hass = hass
+    result = await flow.async_step_user(user_input=None)
     assert result["type"] == FlowResultType.FORM
     assert result.get("errors") in (None, {})
 

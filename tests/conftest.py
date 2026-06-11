@@ -29,6 +29,12 @@ except ImportError:
     sys.modules["homeassistant.helpers.aiohttp_client"] = (
         homeassistant.helpers.aiohttp_client
     )
+    sys.modules["homeassistant.helpers.entity_platform"] = (
+        homeassistant.helpers.entity_platform
+    )
+    sys.modules["homeassistant.helpers.device_registry"] = (
+        homeassistant.helpers.device_registry
+    )
     sys.modules["homeassistant.components.binary_sensor"] = (
         homeassistant.components.binary_sensor
     )

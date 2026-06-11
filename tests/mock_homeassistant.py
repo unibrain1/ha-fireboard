@@ -196,6 +196,10 @@ class CoordinatorEntity:
         self._attr_unique_id = None
         self._attr_name = None
 
+    def __class_getitem__(cls, item):
+        """Support generic type parameters like CoordinatorEntity[T]."""
+        return cls
+
     @property
     def unique_id(self):
         return self._attr_unique_id
@@ -257,10 +261,16 @@ CONF_EMAIL = "email"
 CONF_PASSWORD = "password"
 
 
-class MockModule:
-    """Mock module class."""
+import types
+
+
+class MockModule(types.ModuleType):
+    """Mock module class that behaves as a real Python module/package."""
 
     def __init__(self, **kwargs):
+        super().__init__(kwargs.get("__name__", "mock_module"))
+        # Set __path__ so Python treats this as a package, enabling sub-imports
+        self.__path__ = []
         for key, value in kwargs.items():
             setattr(self, key, value)
 
