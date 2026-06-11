@@ -15,9 +15,11 @@
 
 ### ❌ Not Supported
 
-- MQTT / real-time push updates (intentionally removed — REST polling is sufficient)
-- HACS distribution (manual installation only)
 - Write operations (setting target temperatures, controlling the pellet drive, etc.)
+
+### 🧪 Tested With
+
+- **FireBoard Pellet Drive (FBXPD)** — the only device this integration has been tested against. Other FireBoard models (2 Pro, Spark, etc.) use the same cloud API and should work, but are untested.
 
 ### 📋 Known Limitations
 
