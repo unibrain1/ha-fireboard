@@ -181,11 +181,20 @@ class DataUpdateCoordinator:
 
     async def async_config_entry_first_refresh(self):
         """Mock async_config_entry_first_refresh."""
-        pass
+        await self.async_refresh()
 
     async def async_request_refresh(self):
         """Mock async_request_refresh."""
-        pass
+        await self.async_refresh()
+
+    async def async_refresh(self):
+        """Mock async_refresh — calls _async_update_data and re-raises UpdateFailed."""
+        try:
+            self.data = await self._async_update_data()
+            self.last_update_success = True
+        except UpdateFailed:
+            self.last_update_success = False
+            raise
 
     def __class_getitem__(self, item):
         """Support generic type parameters."""

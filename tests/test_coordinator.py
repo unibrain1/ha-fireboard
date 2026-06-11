@@ -56,7 +56,7 @@ async def test_coordinator_authentication(hass, mock_config_entry_data):
         "custom_components.fireboard.coordinator.FireBoardApiClient"
     ) as mock_client_class:
         mock_client = AsyncMock()
-        mock_client._token = None  # No token initially
+        mock_client.auth_token = None  # coordinator checks .auth_token (property)
         mock_client.authenticate = AsyncMock(return_value=True)
         mock_client.get_devices = AsyncMock(return_value=[])
         mock_client_class.return_value = mock_client
@@ -134,10 +134,10 @@ async def test_coordinator_communication_error(hass, mock_config_entry_data):
             await coordinator.async_refresh()
 
 
-async def test_coordinator_device_offline(
-    hass, mock_config_entry_data, mock_device_data, mock_temperature_data
+async def test_coordinator_skips_device_without_uuid(
+    hass, mock_config_entry_data, mock_device_data
 ):
-    """Test coordinator marks device offline on temperature fetch error."""
+    """Test coordinator skips API entries that have no uuid."""
     config_entry = ConfigEntry(
         domain="fireboard",
         title="Test",
@@ -148,9 +148,10 @@ async def test_coordinator_device_offline(
         "custom_components.fireboard.coordinator.FireBoardApiClient"
     ) as mock_client_class:
         mock_client = AsyncMock()
-        mock_client._token = "test-token"
-        mock_client.get_devices = AsyncMock(return_value=[mock_device_data])
-        mock_client.get_temperatures = AsyncMock(side_effect=Exception("Temp error"))
+        mock_client.auth_token = "test-token"
+        mock_client.get_devices = AsyncMock(
+            return_value=[mock_device_data, {"title": "missing uuid"}]
+        )
         mock_client_class.return_value = mock_client
 
         coordinator = FireBoardDataUpdateCoordinator(hass, config_entry)
@@ -158,6 +159,6 @@ async def test_coordinator_device_offline(
 
         await coordinator.async_refresh()
 
-        # Device should be marked offline but still in data
-        assert mock_device_data["uuid"] in coordinator.data
-        assert coordinator.data[mock_device_data["uuid"]]["online"] is False
+        # Only the device with a uuid should be tracked
+        assert list(coordinator.data.keys()) == [mock_device_data["uuid"]]
+        assert coordinator.data[mock_device_data["uuid"]]["online"] is True
