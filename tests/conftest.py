@@ -96,7 +96,7 @@ def mock_config_entry_data():
 
 @pytest.fixture
 def mock_device_data():
-    """Return mock device data."""
+    """Return mock device data matching FireBoard API shape."""
     return {
         "uuid": "test-device-uuid-123",
         "title": "Test FireBoard",
@@ -105,6 +105,29 @@ def mock_device_data():
         "software_version": "1.0.0",
         "has_battery": True,
         "battery_level": 85,
+        "channels": [
+            {
+                "channel": 1,
+                "channel_label": "Probe 1",
+                "current_temp": 225.5,
+                "target_temp": 225.0,
+                "alerts": [],
+            },
+            {
+                "channel": 2,
+                "channel_label": "Probe 2",
+                "current_temp": 165.0,
+                "target_temp": 165.0,
+                "alerts": [],
+            },
+            {
+                "channel": 3,
+                "channel_label": "Probe 3",
+                "current_temp": None,
+                "target_temp": None,
+                "alerts": [],
+            },
+        ],
     }
 
 

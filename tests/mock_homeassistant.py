@@ -228,7 +228,13 @@ class BinarySensorEntity:
 class SensorEntity:
     """Mock SensorEntity class."""
 
-    pass
+    @property
+    def native_unit_of_measurement(self):
+        return getattr(self, "_attr_native_unit_of_measurement", None)
+
+    @property
+    def native_value(self):
+        return getattr(self, "_attr_native_value", None)
 
 
 class CoordinatorEntity:
